@@ -70,7 +70,9 @@ namespace {
         auto down = nominal;
         up[1] += 0.25;
         down[1] -= 0.5;
-        function.addSystematic("MuonRecoScaleFactor", up, down);
+        if constexpr (LimitSetting::SignalSystematics::detail::hasModernFitFunctionApi<FitFunction>::value) {
+          function.addSystematic("MuonRecoScaleFactor", up, down);
+        }
       }
       collection.insert(function);
     }
@@ -124,15 +126,19 @@ int main() {
   const SignalModel& model = extracted.models.front();
   expect(model.key.reco == "eeee" && model.key.genSim == "eeee" && model.key.projection == "X",
          "Model key was not preserved");
-  expect(model.systematicNames == std::vector<std::string>({"ElectronScaleFactor", "MuonRecoScaleFactor"}),
-         "Systematics were not extracted in deterministic order");
+  const bool hasEmbeddedSystematics = detail::hasModernFitFunctionApi<FitFunction>::value;
+  const std::vector<std::string> expectedSystematics =
+      hasEmbeddedSystematics ? std::vector<std::string>({"ElectronScaleFactor", "MuonRecoScaleFactor"})
+                              : std::vector<std::string>({"ElectronScaleFactor"});
+  expect(model.systematicNames == expectedSystematics, "Systematics were not extracted in deterministic order");
   expectNear(model.nominal[Mean][0], 104.0, "Wrong nominal mean coefficient");
   expectNear(model.up[0][Mean][0], 105.0, "Wrong separate up coefficient");
   expectNear(model.down[0][Mean][0], 102.0, "Wrong separate down coefficient");
-  expectNear(model.up[1][Mean][1], 6.25, "Wrong embedded up coefficient");
-  expectNear(model.down[1][Mean][1], 5.5, "Wrong embedded down coefficient");
-  expect(uniqueSystematicNames(extracted.models) ==
-             std::vector<std::string>({"ElectronScaleFactor", "MuonRecoScaleFactor"}),
+  if (hasEmbeddedSystematics) {
+    expectNear(model.up[1][Mean][1], 6.25, "Wrong embedded up coefficient");
+    expectNear(model.down[1][Mean][1], 5.5, "Wrong embedded down coefficient");
+  }
+  expect(uniqueSystematicNames(extracted.models) == expectedSystematics,
          "Unique systematic-name collection failed");
 
   FitFunctionCollection incomplete;

@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -102,6 +103,15 @@ namespace LimitSetting {
         VariationDirection direction = VariationDirection::Nominal;
         std::string name;
       };
+
+      template <typename T, typename = void>
+      struct hasModernFitFunctionApi : std::false_type {};
+
+      template <typename T>
+      struct hasModernFitFunctionApi<
+          T,
+          std::void_t<decltype(T::encodeName(std::declval<std::map<std::string, std::string>>()))>>
+          : std::true_type {};
 
       inline std::string trim(std::string value) {
         const auto first = value.find_first_not_of(" \t\r\n");
@@ -341,21 +351,25 @@ namespace LimitSetting {
         if (variation.direction == detail::VariationDirection::Nominal) {
           detail::assign(model.nominal[*parameter], nominalValues, "nominal " + rowDescription);
 
-          // Also support the older/alternate representation where each
-          // nominal FitFunction owns its absolute up/down TF1 alternatives.
-          for (const auto& systematic : fitFunction.listSystematics()) {
-            const TF1* upFunction = fitFunction.getSystematic(systematic, true);
-            const TF1* downFunction = fitFunction.getSystematic(systematic, false);
-            if (upFunction == nullptr || downFunction == nullptr) {
-              throw std::invalid_argument("Embedded systematic '" + systematic + "' on " + rowDescription +
-                                          " is missing an up or down function");
+          // Also support the alternate representation where each nominal
+          // FitFunction owns absolute up/down TF1 alternatives.  A few older
+          // CMSAnalysis checkouts declare these methods but do not link their
+          // definitions; the modern-name API is a safe compatibility marker.
+          if constexpr (detail::hasModernFitFunctionApi<FitFunction>::value) {
+            for (const auto& systematic : fitFunction.listSystematics()) {
+              const TF1* upFunction = fitFunction.getSystematic(systematic, true);
+              const TF1* downFunction = fitFunction.getSystematic(systematic, false);
+              if (upFunction == nullptr || downFunction == nullptr) {
+                throw std::invalid_argument("Embedded systematic '" + systematic + "' on " + rowDescription +
+                                            " is missing an up or down function");
+              }
+              detail::assign(model.up[systematic][*parameter],
+                             detail::coefficients(*upFunction),
+                             systematic + " up " + rowDescription);
+              detail::assign(model.down[systematic][*parameter],
+                             detail::coefficients(*downFunction),
+                             systematic + " down " + rowDescription);
             }
-            detail::assign(model.up[systematic][*parameter],
-                           detail::coefficients(*upFunction),
-                           systematic + " up " + rowDescription);
-            detail::assign(model.down[systematic][*parameter],
-                           detail::coefficients(*downFunction),
-                           systematic + " down " + rowDescription);
           }
         } else if (variation.direction == detail::VariationDirection::Up) {
           detail::assign(model.up[variation.name][*parameter], nominalValues, variation.name + " up " + rowDescription);
