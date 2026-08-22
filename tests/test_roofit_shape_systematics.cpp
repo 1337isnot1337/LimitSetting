@@ -143,9 +143,13 @@ int main() {
   const char* testWorkdir = std::getenv("LIMITSETTING_TEST_WORKDIR");
   const std::string workspacePath =
       std::string(testWorkdir != nullptr ? testWorkdir : ".") + "/limitsetting_shape_systematics_test.root";
-  expect(workspace.writeToFile(workspacePath.c_str(), true), "Could not write test workspace");
+  const bool writeResult = workspace.writeToFile(workspacePath.c_str(), true);
+  if (!writeResult) {
+    std::cerr << "Warning: RooWorkspace::writeToFile returned false; validating the file contents instead\n";
+  }
 
   TFile input(workspacePath.c_str(), "READ");
+  expect(!input.IsZombie(), "Could not open written test workspace");
   auto* loadedWorkspace = dynamic_cast<RooWorkspace*>(input.Get("w"));
   expect(loadedWorkspace != nullptr, "Could not reload test workspace");
   auto* loadedPdf = dynamic_cast<RooPDF_HiggsAnalysis_DSCB*>(loadedWorkspace->pdf("signal"));

@@ -9,6 +9,7 @@
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooWorkspace.h"
+#include "TFile.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -216,8 +217,14 @@ void construct_models_Higgs_Systematics(const char* signalParameterFile = "",
       throw std::runtime_error("Workspace nuisance " + std::string(nuisance->GetName()) + " is missing or constant");
     }
   }
-  if (!workspace.writeToFile(outputWorkspaceFile, true)) {
-    throw std::runtime_error("Failed to write workspace file " + std::string(outputWorkspaceFile));
+  const bool writeResult = workspace.writeToFile(outputWorkspaceFile, true);
+  TFile writtenWorkspace(outputWorkspaceFile, "READ");
+  if (writtenWorkspace.IsZombie() || writtenWorkspace.Get("higgsworkspace") == nullptr) {
+    throw std::runtime_error("Failed to write a readable workspace file " + std::string(outputWorkspaceFile));
+  }
+  if (!writeResult) {
+    std::cerr << "Warning: RooWorkspace::writeToFile returned false, but the workspace file is readable; "
+                 "continuing.\n";
   }
 
   std::ofstream nuisanceOutput(outputNuisanceLines);
