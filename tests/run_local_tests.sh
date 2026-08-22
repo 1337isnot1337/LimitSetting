@@ -5,6 +5,7 @@ repository_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 build_dir="$(mktemp -d "${repository_dir}/.limitsetting-systematics-tests.XXXXXX")"
 trap 'rm -rf -- "${build_dir}"' EXIT
 export LIMITSETTING_TEST_WORKDIR="${build_dir}"
+export TMPDIR="${build_dir}"
 
 analysis_candidates=()
 if [[ -n "${CMSANALYSIS_BASE:-}" ]]; then
