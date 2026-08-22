@@ -38,12 +38,13 @@ cxx="${CXX:-g++}"
 read -r -a root_cflags <<< "$(root-config --cflags)"
 read -r -a root_libs <<< "$(root-config --libs)"
 common_flags=(-std=c++20 -Wall -Wextra -Wpedantic "${root_cflags[@]}")
-include_flags=(-I"${repository_dir}" -I"${build_dir}/interface" -I"${analysis_dir}/interface")
+include_flags=(-I"${build_dir}/interface" -I"${analysis_dir}/interface" -I"${repository_dir}")
 
 mkdir -p "${build_dir}/interface" "${build_dir}/src"
 cp "${repository_dir}/RooPDF_HiggsAnalysis_Base.h" \
    "${repository_dir}/RooPDF_HiggsAnalysis_DSCB.h" \
    "${repository_dir}/ShapeSystematics.h" \
+   "${repository_dir}/SignalSystematics.h" \
    "${build_dir}/interface/"
 cp "${repository_dir}/RooPDF_HiggsAnalysis_Base.cxx" \
    "${repository_dir}/RooPDF_HiggsAnalysis_DSCB.cxx" \

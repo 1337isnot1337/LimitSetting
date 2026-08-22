@@ -1,7 +1,7 @@
 #ifndef LIMITSETTING_SIGNAL_SYSTEMATICS_H
 #define LIMITSETTING_SIGNAL_SYSTEMATICS_H
 
-#include "FitFunctionCollection.hh"
+#include <FitFunctionCollection.hh>
 #include "ShapeSystematics.h"
 
 #include "TF1.h"
