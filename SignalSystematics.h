@@ -112,6 +112,71 @@ namespace LimitSetting {
         return value.substr(first, last - first + 1);
       }
 
+      // Newer CMSAnalysis releases expose FitFunction::encodeName/decodeName.
+      // Keep the parser local so this package also works with the older
+      // FitFunction API used by the CMSSW_15_0_4 checkout.  The older fitter
+      // encoded parameterized names as reco_genSim/<parameter> <mass> <desc>.
+      inline std::string encodeName(const std::map<std::string, std::string>& fields) {
+        std::string result;
+        for (const auto& [key, value] : fields) {
+          result += key + " - " + value + " | ";
+        }
+        return result;
+      }
+
+      inline std::map<std::string, std::string> decodeName(std::string name) {
+        std::map<std::string, std::string> result;
+        std::istringstream encoded(name);
+        std::string token;
+        while (std::getline(encoded, token, '|')) {
+          const auto dash = token.find(" - ");
+          if (dash == std::string::npos) {
+            continue;
+          }
+          result[trim(token.substr(0, dash))] = trim(token.substr(dash + 3));
+        }
+        if (result.count("Reco") != 0 && result.count("GenSim") != 0) {
+          return result;
+        }
+
+        // Compatibility with parameter files written before encodeName was
+        // added to CMSAnalysis.
+        const auto slash = name.find('/');
+        if (slash == std::string::npos) {
+          return {};
+        }
+        const std::string channel = trim(name.substr(0, slash));
+        const auto separator = channel.find('_');
+        if (separator == std::string::npos) {
+          return {};
+        }
+        result.clear();
+        result["Reco"] = channel.substr(0, separator);
+        result["GenSim"] = channel.substr(separator + 1);
+
+        std::istringstream legacy(trim(name.substr(slash + 1)));
+        std::string parameter;
+        std::string mass;
+        if (!(legacy >> parameter >> mass)) {
+          return {};
+        }
+        result["Parameter"] = parameter;
+        std::string descriptor;
+        std::getline(legacy, descriptor);
+        descriptor = trim(descriptor);
+        for (const auto& [suffix, projection] :
+             std::array<std::pair<std::string, std::string>, 2>{{{" X projection", "X"}, {" Y projection", "Y"}}}) {
+          if (descriptor.size() >= suffix.size() &&
+              descriptor.compare(descriptor.size() - suffix.size(), suffix.size(), suffix) == 0) {
+            result["Projection"] = projection;
+            descriptor = trim(descriptor.substr(0, descriptor.size() - suffix.size()));
+            break;
+          }
+        }
+        result["Systematic"] = descriptor.empty() ? "Nominal" : descriptor;
+        return result;
+      }
+
       inline std::string field(const std::map<std::string, std::string>& decoded, const std::string& name) {
         const auto found = decoded.find(name);
         return found == decoded.end() ? std::string{} : trim(found->second);
@@ -250,7 +315,7 @@ namespace LimitSetting {
 
       for (auto& [storedName, fitFunction] : collection.getFunctions()) {
         (void)storedName;
-        const auto decoded = FitFunction::decodeName(fitFunction.getName());
+        const auto decoded = detail::decodeName(fitFunction.getName());
         const std::string reco = detail::field(decoded, "Reco");
         const std::string genSim = detail::field(decoded, "GenSim");
         if (reco.empty() || genSim.empty()) {

@@ -1,5 +1,6 @@
 #include "FitFunctionCollection.hh"
 #include "RooPDF_HiggsAnalysis_DSCB.h"
+#include "SignalSystematics.h"
 
 #include "RooRealVar.h"
 #include "RooWorkspace.h"
@@ -8,6 +9,7 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <stdexcept>
@@ -56,7 +58,7 @@ namespace {
                                                     {"Parameter", parameter + " 500"},
                                                     {"Systematic", systematic}};
     FitFunction function = FitFunction::createFunctionOfType(
-        FitFunction::FunctionType::PowerLaw, FitFunction::encodeName(fields), "", 0.0, 2000.0);
+        FitFunction::FunctionType::PowerLaw, LimitSetting::SignalSystematics::detail::encodeName(fields), "", 0.0, 2000.0);
     for (std::size_t index = 0; index < values.size(); ++index) {
       function.getFunction()->SetParameter(static_cast<int>(index), values[index]);
     }
@@ -101,9 +103,11 @@ namespace {
 }  // namespace
 
 int main() {
-  const std::string parameterFile = "/tmp/limitsetting_builder_parameters.txt";
-  const std::string workspaceFile = "/tmp/limitsetting_builder_workspace.root";
-  const std::string nuisanceFile = "/tmp/limitsetting_builder_nuisances.txt";
+  const char* testWorkdir = std::getenv("LIMITSETTING_TEST_WORKDIR");
+  const std::string outputDirectory = testWorkdir != nullptr ? testWorkdir : ".";
+  const std::string parameterFile = outputDirectory + "/limitsetting_builder_parameters.txt";
+  const std::string workspaceFile = outputDirectory + "/limitsetting_builder_workspace.root";
+  const std::string nuisanceFile = outputDirectory + "/limitsetting_builder_nuisances.txt";
   std::remove(parameterFile.c_str());
   std::remove(workspaceFile.c_str());
   std::remove(nuisanceFile.c_str());

@@ -25,7 +25,7 @@ namespace {
       fields["Projection"] = projection;
     }
     FitFunction result = FitFunction::createFunctionOfType(
-        FitFunction::FunctionType::PowerLaw, FitFunction::encodeName(fields), "", 0.0, 2000.0);
+        FitFunction::FunctionType::PowerLaw, LimitSetting::SignalSystematics::detail::encodeName(fields), "", 0.0, 2000.0);
     for (std::size_t index = 0; index < values.size(); ++index) {
       result.getFunction()->SetParameter(static_cast<int>(index), values[index]);
     }
