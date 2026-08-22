@@ -53,6 +53,6 @@ RooPDF_HiggsAnalysis_Base::RooPDF_HiggsAnalysis_Base(RooPDF_HiggsAnalysis_Base c
       branch_ratio_1("branch_ratio_1", this, other.branch_ratio_1),
       branch_ratio_2("branch_ratio_2", this, other.branch_ratio_2),
       norm_Systematic("norm_Systematic", this, other.norm_Systematic),
-      shape_Systematics(this, other.shape_Systematics) {}
+      shape_Systematics("shape_Systematics", this, other.shape_Systematics) {}
 
 double RooPDF_HiggsAnalysis_Base::evaluate() const { return 1.0; }
