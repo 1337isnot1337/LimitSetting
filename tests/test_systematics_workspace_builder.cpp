@@ -2,6 +2,8 @@
 #include "RooPDF_HiggsAnalysis_DSCB.h"
 #include "SignalSystematics.h"
 
+#include "TF1.h"
+
 #include "RooRealVar.h"
 #include "RooWorkspace.h"
 #include "TFile.h"
@@ -29,23 +31,16 @@ namespace {
 
   template <typename T>
   auto makePowerLawFunctionImpl(const std::string& name, int)
-      -> decltype(T::createFunctionOfType(T::FunctionType::PowerLaw,
-                                          std::declval<std::string>(),
-                                          std::declval<std::string>(),
-                                          0.0,
-                                          2000.0)) {
-    return T::createFunctionOfType(T::FunctionType::PowerLaw, name, "", 0.0, 2000.0);
+      -> decltype(T(std::declval<const TF1&>(), T::FunctionType::PowerLaw)) {
+    const TF1 function(name.c_str(), "[0]*pow(x-[1],[2])", 0.0, 2000.0);
+    return T(function, T::FunctionType::PowerLaw);
   }
 
   template <typename T>
   auto makePowerLawFunctionImpl(const std::string& name, long)
-      -> decltype(T::createFunctionOfType(T::FunctionType::PowerLaw,
-                                          std::declval<std::string>(),
-                                          std::declval<std::string>(),
-                                          0.0,
-                                          2000.0,
-                                          std::declval<std::string>())) {
-    return T::createFunctionOfType(T::FunctionType::PowerLaw, name, "", 0.0, 2000.0, "");
+      -> decltype(T(std::declval<const TF1&>(), T::FunctionType::PowerLaw, std::declval<std::string>())) {
+    const TF1 function(name.c_str(), "[0]*pow(x-[1],[2])", 0.0, 2000.0);
+    return T(function, T::FunctionType::PowerLaw, "");
   }
 
   FitFunction makePowerLawFunction(const std::string& name) {
