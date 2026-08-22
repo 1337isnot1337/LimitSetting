@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -139,7 +140,9 @@ int main() {
   expect(!workspace.import(signalNorm, RooFit::RecycleConflictNodes()),
          "Could not import signal normalization into workspace");
 
-  const std::string workspacePath = "/tmp/limitsetting_shape_systematics_test.root";
+  const char* testWorkdir = std::getenv("LIMITSETTING_TEST_WORKDIR");
+  const std::string workspacePath =
+      std::string(testWorkdir != nullptr ? testWorkdir : ".") + "/limitsetting_shape_systematics_test.root";
   expect(workspace.writeToFile(workspacePath.c_str(), true), "Could not write test workspace");
 
   TFile input(workspacePath.c_str(), "READ");
