@@ -19,7 +19,10 @@
 
 class RooPDF_HiggsAnalysis_DSCB : public RooPDF_HiggsAnalysis_Base {
 public:
-  RooPDF_HiggsAnalysis_DSCB() {}
+  // ROOT needs a default constructor when materialising dictionaries and
+  // workspace objects.  Keep the flag deterministic even before a streamed
+  // object has been populated.
+  RooPDF_HiggsAnalysis_DSCB() : multiplyBy2(false) {}
   // Compatibility constructor for existing macros.  Because it contains no
   // up/down values, the old generic shape variable intentionally has no
   // effect on the nominal PDF.

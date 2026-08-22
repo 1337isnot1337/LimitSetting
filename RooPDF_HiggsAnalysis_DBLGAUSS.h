@@ -17,7 +17,7 @@
 
 class RooPDF_HiggsAnalysis_DBLGAUSS : public RooPDF_HiggsAnalysis_Base {
 public:
-   RooPDF_HiggsAnalysis_DBLGAUSS() {}
+   RooPDF_HiggsAnalysis_DBLGAUSS() : multiplyBy2(false) {}
    RooPDF_HiggsAnalysis_DBLGAUSS(const char *name, const char *title,        RooAbsReal& _x,
         RooAbsReal& _realHiggsMass,
         RooAbsReal& _branch_ratio_1,

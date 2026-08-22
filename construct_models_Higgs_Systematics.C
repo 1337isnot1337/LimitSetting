@@ -11,7 +11,11 @@
 #include "RooWorkspace.h"
 #include "TFile.h"
 
+#include <cerrno>
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -23,6 +27,16 @@
 #include <vector>
 
 namespace {
+
+  std::string normalizedOutputPath(const char* path) {
+    std::error_code error;
+    const std::filesystem::path absolute = std::filesystem::absolute(std::filesystem::path(path), error);
+    if (error) {
+      return std::filesystem::path(path).lexically_normal().string();
+    }
+    const std::filesystem::path canonical = std::filesystem::weakly_canonical(absolute, error);
+    return (error ? absolute.lexically_normal() : canonical).string();
+  }
 
   std::string resolveSignalParameterFile(const char* requested) {
     if (requested != nullptr && *requested != '\0') {
@@ -87,7 +101,10 @@ void construct_models_Higgs_Systematics(const char* signalParameterFile = "",
       *outputNuisanceLines == '\0') {
     throw std::invalid_argument("Output workspace and nuisance-line paths must not be empty");
   }
-  if (higgsMassValue < 200.0 || higgsMassValue > 2000.0) {
+  if (normalizedOutputPath(outputWorkspaceFile) == normalizedOutputPath(outputNuisanceLines)) {
+    throw std::invalid_argument("Workspace and nuisance-line outputs must be different files");
+  }
+  if (!std::isfinite(higgsMassValue) || higgsMassValue < 200.0 || higgsMassValue > 2000.0) {
     throw std::invalid_argument("Higgs mass must be in the configured [200, 2000] range");
   }
 
@@ -217,10 +234,29 @@ void construct_models_Higgs_Systematics(const char* signalParameterFile = "",
       throw std::runtime_error("Workspace nuisance " + std::string(nuisance->GetName()) + " is missing or constant");
     }
   }
+  errno = 0;
+  if (std::remove(outputWorkspaceFile) != 0 && errno != ENOENT) {
+    throw std::runtime_error("Cannot replace existing workspace file " + std::string(outputWorkspaceFile));
+  }
   const bool writeResult = workspace.writeToFile(outputWorkspaceFile, true);
   TFile writtenWorkspace(outputWorkspaceFile, "READ");
   if (writtenWorkspace.IsZombie() || writtenWorkspace.Get("higgsworkspace") == nullptr) {
     throw std::runtime_error("Failed to write a readable workspace file " + std::string(outputWorkspaceFile));
+  }
+  auto* writtenWorkspaceObject = dynamic_cast<RooWorkspace*>(writtenWorkspace.Get("higgsworkspace"));
+  for (const auto& aggregate : aggregateObjects) {
+    if (writtenWorkspaceObject->pdf(aggregate.c_str()) == nullptr ||
+        writtenWorkspaceObject->function((aggregate + "_norm").c_str()) == nullptr) {
+      throw std::runtime_error("Written workspace is missing signal object " + aggregate);
+    }
+  }
+  for (const auto& [systematic, nuisance] : nuisances) {
+    (void)systematic;
+    RooRealVar* writtenNuisance = writtenWorkspaceObject->var(nuisance->GetName());
+    if (writtenNuisance == nullptr || writtenNuisance->isConstant()) {
+      throw std::runtime_error("Written workspace is missing floating nuisance " +
+                               std::string(nuisance->GetName()));
+    }
   }
   if (!writeResult) {
     std::cerr << "Warning: RooWorkspace::writeToFile returned false, but the workspace file is readable; "

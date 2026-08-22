@@ -29,11 +29,17 @@ FitFunction nominal + absolute up/down fits
     -> Combine `param 0 1` Gaussian constraint
 ```
 
-Both FitFunction formats found in CMSAnalysis are accepted:
+Modern CMSAnalysis builds accept both FitFunction formats:
 
 - embedded alternatives from `FitFunction::addSystematic`, and
 - separate records whose encoded `Systematic` field is `Nominal`, `<name> Up`,
   or `<name> Down` (the current `HiggsSignalFit.C` output).
+
+Older CMSAnalysis checkouts with the legacy six-argument
+`createFunctionOfType` API use the separate-record path. This avoids
+unresolved embedded-systematic symbols in those releases; use a matching
+modern CMSAnalysis checkout if embedded `addSystematic` alternatives are
+required.
 
 Extraction is strict. Once a systematic is present for a DSCB model, every one
 of its seven rows must have both an up and a down fit with the same coefficient
@@ -42,7 +48,9 @@ dropping part of an uncertainty.
 
 ## Build a signal workspace on the cluster
 
-After copying the changes into the CMSSW checkout:
+Use a CMSAnalysis checkout from the same CMSSW release as the active shell.
+`setup.sh` rejects cross-release combinations before changing the
+`CombinedLimit` checkout. Then run:
 
 ```bash
 cd "$CMSSW_BASE/src/HiggsAnalysis/CombinedLimit/LimitSetting"
@@ -104,7 +112,8 @@ the analytic shape morph and directly depends on the nuisance.
 
 ## Validation
 
-Run the repository tests before transfer or on the cluster:
+Run the repository tests before transfer or on the cluster, from the matching
+CMSSW environment:
 
 ```bash
 CMSANALYSIS_BASE="$CMSSW_BASE/src/CMSAnalysis" tests/run_local_tests.sh

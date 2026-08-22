@@ -1,6 +1,7 @@
 #ifndef LIMITSETTING_SHAPE_SYSTEMATICS_H
 #define LIMITSETTING_SHAPE_SYSTEMATICS_H
 
+#include <cmath>
 #include <cstddef>
 #include <stdexcept>
 #include <string>
@@ -52,6 +53,12 @@ namespace LimitSetting {
                                       std::to_string(parameters[row].size()) + " coefficients; expected at least " +
                                       std::to_string(minimumCoefficients));
         }
+        for (std::size_t coefficient = 0; coefficient < parameters[row].size(); ++coefficient) {
+          if (!std::isfinite(parameters[row][coefficient])) {
+            throw std::invalid_argument(label + " row " + std::to_string(row) + " coefficient " +
+                                        std::to_string(coefficient) + " is not finite");
+          }
+        }
       }
     }
 
@@ -65,6 +72,17 @@ namespace LimitSetting {
 
       if (names.size() != up.size() || names.size() != down.size()) {
         throw std::invalid_argument("Systematic names and up/down parameter sets have different sizes");
+      }
+
+      for (std::size_t index = 0; index < names.size(); ++index) {
+        if (names[index].empty()) {
+          throw std::invalid_argument("Systematic names must not be empty");
+        }
+        for (std::size_t previous = 0; previous < index; ++previous) {
+          if (names[previous] == names[index]) {
+            throw std::invalid_argument("Systematic names must be unique: " + names[index]);
+          }
+        }
       }
 
       for (std::size_t index = 0; index < names.size(); ++index) {

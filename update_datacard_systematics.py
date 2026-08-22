@@ -8,10 +8,8 @@ from pathlib import Path
 import re
 
 
-PARAM_LINE = re.compile(
-    r"^(?P<name>\S+)\s+param\s+[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?\s+"
-    r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?(?:\s+#.*)?$"
-)
+NUMBER = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+PARAM_LINE = re.compile(rf"^(?P<name>\S+)\s+param\s+{NUMBER}\s+{NUMBER}(?:\s+#.*)?$")
 
 
 def read_param_lines(path: Path) -> list[str]:

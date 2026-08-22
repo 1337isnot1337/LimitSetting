@@ -112,6 +112,13 @@ namespace {
 int main() {
   using namespace LimitSetting::SignalSystematics;
 
+  const auto legacyName = detail::decodeName("eeee_eeuu/#mu 500 ElectronScaleFactor Up X projection");
+  expect(detail::field(legacyName, "Reco") == "eeee" && detail::field(legacyName, "GenSim") == "eeuu" &&
+             detail::field(legacyName, "Parameter") == "#mu" &&
+             detail::field(legacyName, "Systematic") == "ElectronScaleFactor Up" &&
+             detail::field(legacyName, "Projection") == "X",
+         "Legacy CMSAnalysis parameter name was not decoded");
+
   FitFunctionCollection collection;
   addCompleteNominal(collection, "eeee", "eeee", "X", true);
   addSeparateVariation(collection, "eeee", "eeee", "X", "ElectronScaleFactor", "Up", true);

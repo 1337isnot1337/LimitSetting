@@ -20,13 +20,13 @@ shape_ElectronScaleFactor param 9 9
 result = merge(
     card,
     [
-        "shape_ElectronScaleFactor param 0 1  # ElectronScaleFactor",
-        "shape_MuonRecoScaleFactor param 0 1  # MuonRecoScaleFactor",
+        "shape_ElectronScaleFactor param .0 1.  # ElectronScaleFactor",
+        "shape_MuonRecoScaleFactor param -2.5e-1 +1e0  # MuonRecoScaleFactor",
     ],
 )
 
 assert "kmax * number of nuisance parameters" in result
 assert result.count("shape_ElectronScaleFactor param") == 1
-assert "shape_ElectronScaleFactor param 0 1" in result
-assert "shape_MuonRecoScaleFactor param 0 1" in result
+assert "shape_ElectronScaleFactor param .0 1." in result
+assert "shape_MuonRecoScaleFactor param -2.5e-1 +1e0" in result
 print("datacard systematics merge tests passed")

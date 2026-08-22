@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -50,6 +51,28 @@ int main() {
   }
   if (!rejectedInvalidInput) {
     throw std::runtime_error("Mismatched systematic inputs were not rejected");
+  }
+
+  bool rejectedNonFinite = false;
+  try {
+    auto invalid = nominal;
+    invalid[0][0] = std::numeric_limits<double>::quiet_NaN();
+    validateParameterMatrix(invalid, "non-finite test");
+  } catch (const std::invalid_argument&) {
+    rejectedNonFinite = true;
+  }
+  if (!rejectedNonFinite) {
+    throw std::runtime_error("Non-finite parameter values were not rejected");
+  }
+
+  bool rejectedDuplicateNames = false;
+  try {
+    validateSystematicInputs(nominal, {"duplicate", "duplicate"}, ParameterCube(2, nominal), ParameterCube(2, nominal));
+  } catch (const std::invalid_argument&) {
+    rejectedDuplicateNames = true;
+  }
+  if (!rejectedDuplicateNames) {
+    throw std::runtime_error("Duplicate systematic names were not rejected");
   }
 
   if (nuisanceName("Electron scale factor") != "shape_Electron_scale_factor") {

@@ -110,7 +110,11 @@ namespace LimitSetting {
       template <typename T>
       struct hasModernFitFunctionApi<
           T,
-          std::void_t<decltype(T::encodeName(std::declval<std::map<std::string, std::string>>()))>>
+          std::void_t<decltype(T::createFunctionOfType(T::FunctionType::PowerLaw,
+                                                       std::declval<std::string>(),
+                                                       std::declval<std::string>(),
+                                                       0.0,
+                                                       2000.0))>>
           : std::true_type {};
 
       inline std::string trim(std::string value) {
@@ -353,8 +357,9 @@ namespace LimitSetting {
 
           // Also support the alternate representation where each nominal
           // FitFunction owns absolute up/down TF1 alternatives.  A few older
-          // CMSAnalysis checkouts declare these methods but do not link their
-          // definitions; the modern-name API is a safe compatibility marker.
+          // CMSAnalysis checkouts declare these methods but use a different
+          // factory ABI; that older ABI is a safe compatibility marker for
+          // the separate-record extraction path below.
           if constexpr (detail::hasModernFitFunctionApi<FitFunction>::value) {
             for (const auto& systematic : fitFunction.listSystematics()) {
               const TF1* upFunction = fitFunction.getSystematic(systematic, true);

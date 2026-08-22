@@ -24,20 +24,25 @@ cd HiggsAnalysis/CombinedLimit/LimitSetting
 
 `setup.sh` finds CMSAnalysis from `CMSANALYSIS_BASE`, then
 `$CMSSW_BASE/src/CMSAnalysis`, then the sibling checkout shown above. It no
-longer contains a user-specific CMSSW path. Set `SCRAM_JOBS` to change the
-default four build jobs.
+longer contains a user-specific CMSSW path. Before copying or building, it
+checks that the active `cmsenv`, the `LimitSetting` checkout, and the
+CMSAnalysis checkout refer to the same CMSSW release. Set `SCRAM_JOBS` to
+change the default four build jobs.
 
 ## Shape systematics
 
 The current systematic implementation and cluster workflow are documented in
-[SYSTEMATICS.md](SYSTEMATICS.md). A standalone local test (ROOT plus a
-CMSAnalysis checkout required) is:
+[SYSTEMATICS.md](SYSTEMATICS.md). A standalone test (ROOT plus a CMSAnalysis
+checkout required) is:
 
 ```bash
 CMSANALYSIS_BASE=/path/to/CMSAnalysis tests/run_local_tests.sh
 ```
 
-The test covers interpolation, real `FitFunction` extraction, RooFit nuisance
+Run it after `cmsenv` from the same CMSSW release as the CMSAnalysis checkout.
+The test runner keeps build files, ROOT workspaces, and compiler temporaries in
+a repository-local hidden directory and removes that directory on exit. It
+covers interpolation, real `FitFunction` extraction, RooFit nuisance
 propagation, workspace serialization, multi-component model construction, and
 datacard updates.
 

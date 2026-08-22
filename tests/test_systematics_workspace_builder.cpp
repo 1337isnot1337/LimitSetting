@@ -133,6 +133,21 @@ int main() {
   const std::string parameterFile = outputDirectory + "/limitsetting_builder_parameters.txt";
   const std::string workspaceFile = outputDirectory + "/limitsetting_builder_workspace.root";
   const std::string nuisanceFile = outputDirectory + "/limitsetting_builder_nuisances.txt";
+
+  bool rejectedSameOutput = false;
+  try {
+    construct_models_Higgs_Systematics(parameterFile.c_str(),
+                                       nuisanceFile.c_str(),
+                                       (outputDirectory + "/./limitsetting_builder_nuisances.txt").c_str(),
+                                       900.0,
+                                       "eeee",
+                                       "",
+                                       "X");
+  } catch (const std::invalid_argument&) {
+    rejectedSameOutput = true;
+  }
+  expect(rejectedSameOutput, "Workspace and nuisance output collision was not rejected");
+
   std::remove(parameterFile.c_str());
   std::remove(workspaceFile.c_str());
   std::remove(nuisanceFile.c_str());
