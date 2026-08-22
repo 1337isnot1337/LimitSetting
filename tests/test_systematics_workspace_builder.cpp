@@ -14,6 +14,7 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 void construct_models_Higgs_Systematics(const char* signalParameterFile,
@@ -25,6 +26,31 @@ void construct_models_Higgs_Systematics(const char* signalParameterFile,
                                         const char* projectionFilter);
 
 namespace {
+
+  template <typename T>
+  auto makePowerLawFunctionImpl(const std::string& name, int)
+      -> decltype(T::createFunctionOfType(T::FunctionType::PowerLaw,
+                                          std::declval<std::string>(),
+                                          std::declval<std::string>(),
+                                          0.0,
+                                          2000.0)) {
+    return T::createFunctionOfType(T::FunctionType::PowerLaw, name, "", 0.0, 2000.0);
+  }
+
+  template <typename T>
+  auto makePowerLawFunctionImpl(const std::string& name, long)
+      -> decltype(T::createFunctionOfType(T::FunctionType::PowerLaw,
+                                          std::declval<std::string>(),
+                                          std::declval<std::string>(),
+                                          0.0,
+                                          2000.0,
+                                          std::declval<std::string>())) {
+    return T::createFunctionOfType(T::FunctionType::PowerLaw, name, "", 0.0, 2000.0, "");
+  }
+
+  FitFunction makePowerLawFunction(const std::string& name) {
+    return makePowerLawFunctionImpl<FitFunction>(name, 0);
+  }
 
   const std::array<std::string, 7> parameterNames{
       "#alpha_{low}", "#alpha_{high}", "n_{low}", "n_{high}", "#mu", "#sigma", "norm"};
@@ -57,8 +83,7 @@ namespace {
                                                     {"Projection", "X"},
                                                     {"Parameter", parameter + " 500"},
                                                     {"Systematic", systematic}};
-    FitFunction function = FitFunction::createFunctionOfType(
-        FitFunction::FunctionType::PowerLaw, LimitSetting::SignalSystematics::detail::encodeName(fields), "", 0.0, 2000.0);
+    FitFunction function = makePowerLawFunction(LimitSetting::SignalSystematics::detail::encodeName(fields));
     for (std::size_t index = 0; index < values.size(); ++index) {
       function.getFunction()->SetParameter(static_cast<int>(index), values[index]);
     }
