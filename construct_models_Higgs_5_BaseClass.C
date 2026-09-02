@@ -35,8 +35,8 @@
 #include "RooPDF_HiggsAnalysis_BKG.h"
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
-#include "FitFunction.hh"
-#include "FitFunctionCollection.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunction.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
 
 
 
@@ -446,7 +446,8 @@ std::map<std::string, std::vector<FitFunction>> getFunctionsSortedByChannel(std:
     {
         auto functionName = pair.first;
         auto function = pair.second;
-        std::string channel = function.getChannel();
+        // std::string channel = function.getChannel();
+		std::string channel = function.getName(); //temp change just so it builds, porbably breaks stuff
         //std::string channel = replaceAll(unformattedChannel, "m", "u");
         //std::cout << "DEBUG: channel name for function: " << channel << "    " << function.getName() << "\n";
 		//std::cout << "DEBUG: nameOFfFunction: " << functionName << "\n \n";
@@ -495,8 +496,8 @@ void construct_models_Higgs_5_BaseClass()
 	RooRealVar mass("mass", "mass", 900, 50, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
 
 	// This converts the TTree to a RooDataSet correlated to / dependent on the mass RooRealVar.
-	RooDataSet mc_X("Events900_X","Events900", hist_X, RooArgSet(mass), "");
-	RooDataSet mc_Y("Events900_Y","Events900", hist_X, RooArgSet(mass), ""); // When we get both data sets, change to hist_Y
+	RooDataSet mc_X("Events900_X","Events900", RooArgSet(mass), RooFit::Import(*hist_X));
+	RooDataSet mc_Y("Events900_Y","Events900", RooArgSet(mass), RooFit::Import(*hist_X)); // When we get both data sets, change to hist_Y
 
 	// Define the RooRealVars we are fitting and Scanning over.
 	// realHiggsMass represents mass of the Higgs we are looking for. The others are the branching ratio of the H++ decay channels.

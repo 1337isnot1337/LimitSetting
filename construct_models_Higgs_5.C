@@ -349,8 +349,8 @@ void construct_models_Higgs_5()
 	//RooRealVar mass("mass", "mass", 900, 400, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
 
 	// This converts the TTree to a RooDataSet correlated to / dependent on the mass RooRealVar.
-	RooDataSet mc_X("Events900_X","Events900", hist_X, RooArgSet(mass), "");
-	RooDataSet mc_Y("Events900_Y","Events900", hist_X, RooArgSet(mass), ""); // When we get both data sets, change to hist_Y
+	RooDataSet mc_X("Events900_X","Events900", RooArgSet(mass), RooFit::Import(*hist_X));
+	RooDataSet mc_Y("Events900_Y","Events900", RooArgSet(mass), RooFit::Import(*hist_X)); // When we get both data sets, change to hist_Y
 
 
 	// Define the RooRealVars we are fitting and Scanning over.
